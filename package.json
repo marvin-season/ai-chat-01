@@ -14,6 +14,7 @@
   "author": "",
   "license": "ISC",
   "description": "",
+  "packageManager": "pnpm@10.12.1",
   "dependencies": {
     "@ai-sdk/openai": "^3.0.74",
     "ai": "^6.0.209",

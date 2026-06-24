@@ -5,7 +5,7 @@ A minimal TypeScript Q&A service built with Express, AI SDK, and DeepSeek's Open
 ## Setup
 
 ```bash
-npm install
+pnpm install
 cp .env.example .env
 ```
 
@@ -19,7 +19,7 @@ PORT=3000
 ## Run
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 Ask a question:
@@ -41,7 +41,7 @@ Response:
 ## Scripts
 
 ```bash
-npm test
-npm run typecheck
-npm run build
+pnpm test
+pnpm typecheck
+pnpm build
 ```
