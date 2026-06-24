@@ -62,11 +62,44 @@ describe("createDeepSeekAnswerer", () => {
     await expect(answerQuestion("介绍一下 TypeScript")).resolves.toBe("DeepSeek answer");
     expect(generate).toHaveBeenCalledWith(
       expect.objectContaining({
-        prompt: "介绍一下 TypeScript",
+        prompt: expect.stringContaining("Question:\n介绍一下 TypeScript"),
         system: expect.stringContaining("helpful AI assistant")
       })
     );
     const firstCall = generate.mock.calls[0];
     expect(firstCall?.[0].model).toBeDefined();
+  });
+
+  it("adds retrieved markdown context to the model prompt", async () => {
+    const generate = vi.fn(
+      async (_options: { model: unknown; prompt: string; system: string }) => ({
+        text: "RAG answer"
+      })
+    );
+    const retrieveContext = vi.fn(async () => [
+      {
+        content: "RAG means retrieval augmented generation.",
+        score: 2
+      }
+    ]);
+    const answerQuestion = createDeepSeekAnswerer({
+      env: { DEEPSEEK_API_KEY: "test-key" },
+      generate,
+      retrieveContext
+    });
+
+    await answerQuestion("什么是 RAG？");
+
+    expect(retrieveContext).toHaveBeenCalledWith("什么是 RAG？");
+    expect(generate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: expect.stringContaining("RAG means retrieval augmented generation.")
+      })
+    );
+    expect(generate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: expect.stringContaining("Question:\n什么是 RAG？")
+      })
+    );
   });
 });

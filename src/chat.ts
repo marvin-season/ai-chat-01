@@ -4,6 +4,7 @@ import { Router, type Request, type Response } from "express";
 import { z } from "zod";
 
 import type { AppEnv } from "./env.js";
+import { formatRagContext, type RetrievedChunk } from "./rag.js";
 
 const DEFAULT_MODEL = "deepseek-chat";
 const DEEPSEEK_BASE_URL = "https://api.deepseek.com/v1";
@@ -15,6 +16,7 @@ const chatRequestSchema = z.object({
 });
 
 type AnswerQuestion = (question: string) => Promise<string>;
+type RetrieveContext = (question: string) => Promise<RetrievedChunk[]>;
 type GenerateTextLike = (options: {
   model: LanguageModel;
   prompt: string;
@@ -30,6 +32,7 @@ type DeepSeekAnswererOptions = {
   model?: string;
   system?: string;
   generate?: GenerateTextLike;
+  retrieveContext?: RetrieveContext;
 };
 
 const defaultGenerate: GenerateTextLike = async (options) => {
@@ -41,7 +44,8 @@ export function createDeepSeekAnswerer({
   env,
   model = DEFAULT_MODEL,
   system = DEFAULT_SYSTEM_PROMPT,
-  generate = defaultGenerate
+  generate = defaultGenerate,
+  retrieveContext
 }: DeepSeekAnswererOptions = {}): AnswerQuestion {
   return async (question) => {
     const apiKey = env?.DEEPSEEK_API_KEY?.trim();
@@ -56,9 +60,21 @@ export function createDeepSeekAnswerer({
       name: "deepseek"
     });
 
+    const chunks = retrieveContext ? await retrieveContext(question) : [];
+    const context = formatRagContext(chunks);
+
     const result = await generate({
       model: deepseek.chat(model),
-      prompt: question,
+      prompt: [
+        "Use the following context from demo.md to answer the question.",
+        "If the context does not contain the answer, say that demo.md does not provide enough information.",
+        "",
+        "Context:",
+        context,
+        "",
+        "Question:",
+        question
+      ].join("\n"),
       system
     });
 
