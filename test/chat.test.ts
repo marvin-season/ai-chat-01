@@ -101,5 +101,20 @@ describe("createDeepSeekAnswerer", () => {
         prompt: expect.stringContaining("Question:\n什么是 RAG？")
       })
     );
+    expect(generate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: expect.stringContaining("Answer in first person as the AI assistant")
+      })
+    );
+    expect(generate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: expect.stringContaining("Summarize the relevant context instead of copying it verbatim")
+      })
+    );
+    expect(generate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: expect.stringContaining("Use a mildly playful tone")
+      })
+    );
   });
 });

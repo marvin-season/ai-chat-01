@@ -24,4 +24,18 @@ describe("createMarkdownRetriever", () => {
       })
     ]);
   });
+
+  it("matches mixed Chinese and English questions against markdown context", async () => {
+    const retrieve = createMarkdownRetriever({
+      markdown: "LeaveYoung 是一个 20 多岁的男生，毕业于瓦坎达大学，别名渣羊。"
+    });
+
+    const chunks = await retrieve("LeaveYoung是谁？");
+
+    expect(chunks).toEqual([
+      expect.objectContaining({
+        content: expect.stringContaining("别名渣羊")
+      })
+    ]);
+  });
 });

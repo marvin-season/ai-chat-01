@@ -14,7 +14,7 @@ type MarkdownRetrieverOptions = {
 type RetrieveMarkdown = (question: string) => Promise<RetrievedChunk[]>;
 
 const DEFAULT_MAX_CHUNKS = 3;
-const TOKEN_PATTERN = /[\p{L}\p{N}]+/gu;
+const TOKEN_PATTERN = /[a-z0-9]+|[\p{Script=Han}]/giu;
 
 function tokenize(text: string): string[] {
   return Array.from(text.toLowerCase().matchAll(TOKEN_PATTERN), (match) => match[0]);

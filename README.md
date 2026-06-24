@@ -38,6 +38,24 @@ Response:
 }
 ```
 
+## Curl Examples
+
+Ask about the RAG demo:
+
+```bash
+curl -X POST http://localhost:3000/api/chat \
+  -H "content-type: application/json" \
+  -d '{"question":"这个服务如何使用 RAG 回答问题？"}'
+```
+
+Ask about local demo knowledge:
+
+```bash
+curl -X POST http://localhost:3000/api/chat \
+  -H "content-type: application/json" \
+  -d '{"question":"LeaveYoung是谁？"}'
+```
+
 ## RAG Demo
 
 The demo knowledge base lives in `demo.md`.

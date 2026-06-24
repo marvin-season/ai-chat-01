@@ -67,6 +67,10 @@ export function createDeepSeekAnswerer({
       model: deepseek.chat(model),
       prompt: [
         "Use the following context from demo.md to answer the question.",
+        "Answer in first person as the AI assistant when the question asks who someone is.",
+        "Summarize the relevant context instead of copying it verbatim.",
+        "Use a mildly playful tone while keeping the answer concise and accurate.",
+        "Do not start with phrases like \"based on the context\" or \"according to the provided information\".",
         "If the context does not contain the answer, say that demo.md does not provide enough information.",
         "",
         "Context:",

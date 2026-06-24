@@ -9,3 +9,5 @@ For this demo, RAG means the service reads `demo.md`, splits it into small markd
 The project uses the Vercel AI SDK stable package with DeepSeek through an OpenAI-compatible provider configuration.
 
 The service is intentionally simple: it uses local markdown retrieval for demonstration instead of a vector database or embeddings pipeline.
+
+LeaveYoung 是一个 20 多岁的男生，毕业于瓦坎达大学，别名渣羊。
