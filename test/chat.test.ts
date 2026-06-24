@@ -1,51 +1,47 @@
+import express from "express";
+import request from "supertest";
 import { describe, expect, it, vi } from "vitest";
 
-import { createDeepSeekAnswerer, createChatHandler } from "../src/chat.js";
+import { createChatRouter, createDeepSeekAnswerer } from "../src/chat.js";
 
-describe("createChatHandler", () => {
+function createTestApp(answerQuestion: (question: string) => Promise<string>) {
+  const app = express();
+  app.use(express.json());
+  app.use("/api", createChatRouter({ answerQuestion }));
+  return app;
+}
+
+describe("POST /api/chat", () => {
   it("returns an AI answer for a valid question", async () => {
-    const handler = createChatHandler({
-      answerQuestion: async (question) => `answer: ${question}`
-    });
+    const app = createTestApp(async (question) => `answer: ${question}`);
 
-    const response = await handler(
-      new Request("http://localhost/api/chat", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ question: "什么是 AI SDK？" })
-      })
-    );
+    const response = await request(app)
+      .post("/api/chat")
+      .send({ question: "什么是 AI SDK？" })
+      .expect(200);
 
-    await expect(response.json()).resolves.toEqual({
+    expect(response.body).toEqual({
       answer: "answer: 什么是 AI SDK？"
     });
-    expect(response.status).toBe(200);
   });
 
   it("rejects an empty question", async () => {
-    const handler = createChatHandler({
-      answerQuestion: async () => "unused"
-    });
+    const app = createTestApp(async () => "unused");
 
-    const response = await handler(
-      new Request("http://localhost/api/chat", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ question: "   " })
-      })
-    );
+    const response = await request(app)
+      .post("/api/chat")
+      .send({ question: "   " })
+      .expect(400);
 
-    await expect(response.json()).resolves.toEqual({
+    expect(response.body).toEqual({
       error: "question is required"
     });
-    expect(response.status).toBe(400);
   });
 });
 
 describe("createDeepSeekAnswerer", () => {
   it("requires DEEPSEEK_API_KEY", async () => {
     const answerQuestion = createDeepSeekAnswerer({
-      env: {},
       generate: async () => ({ text: "unused" })
     });
 

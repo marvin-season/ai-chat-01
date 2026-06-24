@@ -1,6 +1,6 @@
 # AI Chat Service
 
-A minimal TypeScript Q&A service built with AI SDK and DeepSeek's OpenAI-compatible API.
+A minimal TypeScript Q&A service built with Express, AI SDK, and DeepSeek's OpenAI-compatible API.
 
 ## Setup
 

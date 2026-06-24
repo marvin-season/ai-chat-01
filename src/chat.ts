@@ -1,6 +1,9 @@
 import { createOpenAI } from "@ai-sdk/openai";
 import { generateText, type LanguageModel } from "ai";
+import { Router, type Request, type Response } from "express";
 import { z } from "zod";
+
+import type { AppEnv } from "./env.js";
 
 const DEFAULT_MODEL = "deepseek-chat";
 const DEEPSEEK_BASE_URL = "https://api.deepseek.com/v1";
@@ -11,7 +14,6 @@ const chatRequestSchema = z.object({
   question: z.string().trim().min(1)
 });
 
-type Env = Record<string, string | undefined>;
 type AnswerQuestion = (question: string) => Promise<string>;
 type GenerateTextLike = (options: {
   model: LanguageModel;
@@ -19,12 +21,12 @@ type GenerateTextLike = (options: {
   system: string;
 }) => Promise<{ text: string }>;
 
-type ChatHandlerOptions = {
+type ChatRouterOptions = {
   answerQuestion: AnswerQuestion;
 };
 
 type DeepSeekAnswererOptions = {
-  env?: Env;
+  env?: Pick<AppEnv, "DEEPSEEK_API_KEY">;
   model?: string;
   system?: string;
   generate?: GenerateTextLike;
@@ -36,13 +38,13 @@ const defaultGenerate: GenerateTextLike = async (options) => {
 };
 
 export function createDeepSeekAnswerer({
-  env = process.env,
+  env,
   model = DEFAULT_MODEL,
   system = DEFAULT_SYSTEM_PROMPT,
   generate = defaultGenerate
 }: DeepSeekAnswererOptions = {}): AnswerQuestion {
   return async (question) => {
-    const apiKey = env.DEEPSEEK_API_KEY?.trim();
+    const apiKey = env?.DEEPSEEK_API_KEY?.trim();
 
     if (!apiKey) {
       throw new Error("DEEPSEEK_API_KEY is required");
@@ -64,42 +66,26 @@ export function createDeepSeekAnswerer({
   };
 }
 
-export function createChatHandler({ answerQuestion }: ChatHandlerOptions) {
-  return async (request: Request): Promise<Response> => {
-    if (request.method !== "POST") {
-      return jsonResponse({ error: "method not allowed" }, 405);
-    }
+export function createChatRouter({ answerQuestion }: ChatRouterOptions) {
+  const router = Router();
 
-    let body: unknown;
-    try {
-      body = await request.json();
-    } catch {
-      return jsonResponse({ error: "invalid json body" }, 400);
-    }
-
-    const parsed = chatRequestSchema.safeParse(body);
+  router.post("/chat", async (req: Request, res: Response) => {
+    const parsed = chatRequestSchema.safeParse(req.body);
 
     if (!parsed.success) {
-      return jsonResponse({ error: "question is required" }, 400);
+      res.status(400).json({ error: "question is required" });
+      return;
     }
 
     try {
       const answer = await answerQuestion(parsed.data.question);
-      return jsonResponse({ answer }, 200);
+      res.json({ answer });
     } catch (error) {
-      return jsonResponse(
-        { error: error instanceof Error ? error.message : "failed to answer question" },
-        500
-      );
-    }
-  };
-}
-
-function jsonResponse(body: unknown, status: number): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: {
-      "content-type": "application/json; charset=utf-8"
+      res.status(500).json({
+        error: error instanceof Error ? error.message : "failed to answer question"
+      });
     }
   });
+
+  return router;
 }
